@@ -2,8 +2,8 @@ import { useState } from 'react'
 import Band from './Band'
 import './Slider.scss'
 
-let ss: number = 9
-let quVis: number = 3
+let ss: number = 20
+let quVis: number = 1
 let wght: number = 100
 let speed: number = 0.3
 
@@ -31,6 +31,48 @@ const Slider = () => {
           shift={shift}
           speed={speed}
         />
+        <div
+          tabIndex={0}
+          className={'slider__cover'}
+          onMouseDown={(e) => mousDown(e)}
+          onMouseMove={(e) => mousMove(e)}
+          onMouseUp={(e) => {
+            setBand(() => {
+              let index = mousUp(e, band.index, ss)
+              return { index }
+            })
+          }}
+          onTouchStart={(e) => touchStart(e)}
+          onTouchMove={(e) => touchMove(e)}
+          onTouchEnd={(e) => {
+            setBand(() => {
+              let index = touchEnd(e, band.index, ss)
+              return { index }
+            })
+          }}
+          onWheel={(e) => {
+            setBand(() => {
+              let index = wheel(e, band.index, ss)
+              return { index }
+            })
+          }}
+          onKeyDown={(e) => {
+            setBand(() => {
+              let index = arrowCtrl(e, band.index, ss)
+              return { index }
+            })
+          }}
+          onMouseOut={(e) => {
+            if (posIn != 0) {
+              setBand(() => {
+                let index = mousUp(e, band.index, ss)
+                console.log(index)
+                posIn = 0
+                return { index }
+              })
+            }
+          }}
+        ></div>
       </div>
       <div className="slider__arrows">
         <button
@@ -63,6 +105,79 @@ const Slider = () => {
 }
 
 export default Slider
+
+let posIn: number
+let posX2: number
+let mousG: boolean
+let limit: number = 30
+
+function arrowCtrl(
+  e: React.KeyboardEvent,
+  i: number,
+  ss: number
+): number {
+  let r: number = i
+  if (e.key === 'ArrowLeft') r = prevIndex(i, ss - 1)
+  if (e.key === 'ArrowRight') r = nextIndex(i, ss - 1)
+  return r
+}
+
+function wheel(e: React.WheelEvent, i: number, ss: number): number {
+  let r: number = i
+  if (e.deltaY > 0) r = prevIndex(i, ss - 1)
+  if (e.deltaY < 0) r = nextIndex(i, ss - 1)
+  return r
+}
+
+function mousDown(e: React.MouseEvent) {
+  mousG = true
+  posIn = e.clientX
+}
+
+function mousMove(e: React.MouseEvent) {
+  if (!mousG) return
+  posX2 = e.clientX - posIn
+}
+
+function mousUp(e: React.MouseEvent, i: number, ss: number): number {
+  mousG = false
+  let r: number = i
+  console.log(posX2)
+  if (posX2 > limit) {
+    r = prevIndex(i, ss - 1)
+    console.log(r)
+  }
+  if (posX2 < -limit) {
+    r = nextIndex(i, ss - 1)
+  }
+  return r
+}
+
+function touchStart(e: React.TouchEvent) {
+  mousG = true
+  posIn = e.touches[0].clientX
+}
+
+function touchMove(e: React.TouchEvent) {
+  if (!mousG) return
+  posX2 = e.touches[0].clientX - posIn
+}
+
+function touchEnd(
+  e: React.TouchEvent,
+  i: number,
+  ss: number
+): number {
+  mousG = false
+  let r: number = i
+  if (posX2 > limit) {
+    r = prevIndex(i, ss - 1)
+  }
+  if (posX2 < -limit) {
+    r = nextIndex(i, ss - 1)
+  }
+  return r
+}
 
 function prevIndex(i: number, maxI: number): number {
   if (i === 0) return maxI

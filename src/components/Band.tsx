@@ -36,12 +36,7 @@ const Band = (props: ourProps) => {
     )
   }
 
-  return (
-    <div>
-      {arrJSX}
-      <div className={'slider__cover'}></div>
-    </div>
-  )
+  return <div>{arrJSX}</div>
 }
 
 export default Band
