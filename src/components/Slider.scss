@@ -1,0 +1,26 @@
+.slider {
+  &__wind {
+    border: solid 2px #005;
+    position: relative;
+    width: 100px; //?
+    margin: 0 auto;
+    height: 100px;
+    overflow: hidden;
+  }
+  &__cover {
+    height: 100px;
+  }
+  .slide {
+    position: absolute;
+  }
+}
+
+.slider__arrows {
+  width: min-content;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+}
+.arrow {
+  margin: 10px;
+}
