@@ -1,16 +1,25 @@
-import s from './Slide.module.scss'
+import './Slide.scss'
 
 type ourProps = {
-  src: string
+  id: string
+  pos: string
+  hidd: boolean
+  speed: number
 }
-
-let Slide = (props: ourProps) => {
+const Slide = (props: ourProps) => {
+  let hidd: string = ''
+  props.hidd ? (hidd = 'all 0s') : (hidd = `all ${props.speed}s ease`)
   return (
     <img
-      className={s.Slide}
-      src={props.src}
-      alt={'img'}
-    ></img>
+      className="slide"
+      src={props.id}
+      alt={props.id}
+      style={{
+        transform: props.pos,
+        transition: hidd,
+      }}
+    />
   )
 }
 export default Slide
+// transition: all 1s ease;

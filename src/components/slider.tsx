@@ -1,50 +1,59 @@
 import { useState } from 'react'
-import Slide from './Slide'
-import s from './Slider.module.scss'
+import Band from './Band'
+import './Slider.scss'
+
+let ss: number = 9
+let quVis: number = 3
+let wght: number = 100
+let speed: number = 0.3
+
+let mid: number = (ss / 2) | 0
+let left: number = ss - mid - 1
+let rght: number = ss - mid - (ss % 2)
+let maxIndex: number = ss - 1
+let widthWin: string = quVis * wght + 'px'
+let shift: number = calcShift(ss, quVis)
 
 const Slider = () => {
-  let c: number = 100
-  let arr = []
-  for (let i: number = 0; i < c; i++) {
-    arr[i] = (
-      <Slide
-        src={'/imgs/' + fileName(i) + '.jpg'}
-        key={fileName(i)}
-      />
-    )
-  }
-
-  // function setIndex(i: number): number {
-  //   return i++
-  // }
-
-  const [index, setIndex] = useState<number>(0)
+  const [band, setBand] = useState({
+    index: mid,
+  })
 
   return (
-    <div className={s.slider}>
-      <div className={s.slider__wind}>
-        <div className={s.slider__track}>
-          {arr[index - 1]}
-          {arr[index]}
-          {arr[index + 1]}
-        </div>
+    <div className="slider">
+      <div className="slider__wind" style={{ width: widthWin }}>
+        <Band
+          ss={ss}
+          index={band.index}
+          wght={wght}
+          left={left}
+          rght={rght}
+          shift={shift}
+          speed={speed}
+        />
       </div>
-      <div className={s.slider__arrows}>
+      <div className="slider__arrows">
         <button
           type="button"
-          className="arr arr-prev"
-          onClick={() =>
-            setIndex(() => {
-              return index - 1
+          className="arrow prev"
+          onClick={() => {
+            setBand(() => {
+              let index = prevIndex(band.index, maxIndex)
+              return { index }
             })
-          }
+          }}
         >
           &larr;
         </button>
         <button
           type="button"
-          className="arr arr-next"
-          onClick={() => setIndex(index + 1)}
+          className="arrow next"
+          onClick={() => {
+            setBand(() => {
+              let index = nextIndex(band.index, maxIndex)
+              return { index }
+            })
+          }}
         >
           &rarr;
         </button>
@@ -53,10 +62,20 @@ const Slider = () => {
   )
 }
 
-let fileName = function (i: number): string {
-  if (i < 10) return '00' + i
-  if (i < 100) return '0' + i
-  return '' + i
+export default Slider
+
+function prevIndex(i: number, maxI: number): number {
+  if (i === 0) return maxI
+  return i - 1
 }
 
-export default Slider
+function nextIndex(i: number, maxI: number): number {
+  if (i === maxI) return 0
+  return i + 1
+}
+
+function calcShift(ss: number, qs: number): number {
+  if (qs % 2 !== 0) return -wght / 2
+  if (ss % 2 !== 0 && qs % 2 === 0) return 0
+  else return -wght
+}
