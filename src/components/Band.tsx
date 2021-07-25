@@ -1,7 +1,8 @@
+import { Fragment } from 'react'
 import Slide from './Slide'
 
 type ourProps = {
-  ss: number
+  quTotal: number
   index: number
   wght: number
   left: number
@@ -15,28 +16,28 @@ const Band = (props: ourProps) => {
   let min = -props.left * props.wght
   let max = props.rght * props.wght
 
-  for (let i = 0; i < props.ss; i++) {
-    let hidd: boolean = false
+  for (let i = 0; i < props.quTotal; i++) {
+    let outside: boolean = false
     let src = getSRC(i)
 
     let p = (i - props.index) * props.wght
     if (p - min < 0) p = max + (p - min + props.wght)
     if (p - max > 0) p = min + (p - max - props.wght)
-    if (p === max || p === min) hidd = true
+    if (p === max || p === min) outside = true
     p += props.shift
 
     arrJSX.push(
       <Slide
         key={src}
-        id={src}
-        pos={'translateX(' + p + 'px)'}
-        hidd={hidd}
+        source={src}
+        position={'translateX(' + p + 'px)'}
+        outside={outside}
         speed={props.speed}
       />
     )
   }
 
-  return <div>{arrJSX}</div>
+  return <Fragment>{arrJSX}</Fragment>
 }
 
 export default Band
