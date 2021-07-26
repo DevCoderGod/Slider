@@ -23,5 +23,5 @@ yarn-debug.log*
 yarn-error.log*
 
 # proj
-images
+# images
 .vscode
