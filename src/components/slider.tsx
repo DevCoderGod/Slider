@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { filter, fromEvent, map, switchMap } from 'rxjs'
 import Band from './Band'
 import './Slider.scss'
 
@@ -6,6 +7,7 @@ let quTotal: number = 20
 let quVis: number = 1
 let wght: number = 100
 let speed: number = 0.3
+let limit: number = 20
 
 let middle: number = (quTotal / 2) | 0
 let left: number = quTotal - middle - 1
@@ -16,10 +18,47 @@ let shift: number = calcShift(quTotal, quVis)
 
 const Slider = () => {
   const [index, setBand] = useState(middle)
+  const control = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    let mouseReset = mousRx(control.current!).subscribe((diff) => {
+      if (diff > limit) setBand(prevIndex(index, maxIndex))
+      if (diff < -limit) setBand(nextIndex(index, maxIndex))
+    })
+
+    let touchReset = touchRx(control.current!).subscribe((diff) => {
+      if (diff > limit) setBand(prevIndex(index, maxIndex))
+      if (diff < -limit) setBand(nextIndex(index, maxIndex))
+    })
+
+    let wheelReset = wheelRx(control.current!).subscribe((diff) => {
+      if (diff > 0) setBand(prevIndex(index, maxIndex))
+      if (diff < 0) setBand(nextIndex(index, maxIndex))
+    })
+
+    let KeyboardReset = KeyboardRx(control.current!).subscribe(
+      (key) => {
+        if (key === 'ArrowLeft') setBand(prevIndex(index, maxIndex))
+        if (key === 'ArrowRight') setBand(nextIndex(index, maxIndex))
+      }
+    )
+
+    return () => {
+      mouseReset.unsubscribe()
+      touchReset.unsubscribe()
+      wheelReset.unsubscribe()
+      KeyboardReset.unsubscribe()
+    }
+  }, [index])
 
   return (
     <div className="slider">
-      <div className="slider__wind" style={{ width: widthWin }}>
+      <div
+        className="slider__window"
+        style={{ width: widthWin }}
+        ref={control}
+        tabIndex={0}
+      >
         <Band
           quTotal={quTotal}
           index={index}
@@ -29,33 +68,12 @@ const Slider = () => {
           shift={shift}
           speed={speed}
         />
-        <div
-          tabIndex={0}
-          className={'slider__cover'}
-          onMouseDown={(e) => mousDown(e)}
-          onMouseMove={(e) => mousMove(e)}
-          onMouseUp={(e) => setBand(mousUp(e, index, quTotal))}
-          onMouseOut={(e) => setBand(mousUp(e, index, quTotal))}
-          onTouchStart={(e) => touchStart(e)}
-          onTouchMove={(e) => touchMove(e)}
-          onTouchEnd={(e) => setBand(touchEnd(e, index, quTotal))}
-          onWheel={(e) => setBand(wheel(e, index, quTotal))}
-          onKeyDown={(e) => setBand(arrowCtrl(e, index, quTotal))}
-        ></div>
       </div>
       <div className="slider__arrows">
-        <button
-          type="button"
-          className="arrow prev"
-          onClick={() => setBand(prevIndex(index, maxIndex))}
-        >
+        <button onClick={() => setBand(prevIndex(index, maxIndex))}>
           &larr;
         </button>
-        <button
-          type="button"
-          className="arrow next"
-          onClick={() => setBand(nextIndex(index, maxIndex))}
-        >
+        <button onClick={() => setBand(nextIndex(index, maxIndex))}>
           &rarr;
         </button>
       </div>
@@ -65,80 +83,44 @@ const Slider = () => {
 
 export default Slider
 
-let posStart: number
-let posEnd: number
-let limit: number = 20
-
-function mousDown(e: React.MouseEvent) {
-  posStart = e.clientX
-  posEnd = 0
+function mousRx(control: HTMLDivElement) {
+  return fromEvent<React.MouseEvent>(control, 'mousedown').pipe(
+    map((e) => e.clientX),
+    switchMap((xStart) => {
+      return fromEvent<React.MouseEvent>(document, 'mouseup').pipe(
+        map((e) => e.clientX - xStart),
+        filter(
+          (difference) => difference > limit || difference < -limit
+        )
+      )
+    })
+  )
 }
 
-function mousMove(e: React.MouseEvent) {
-  if (!posStart) return
-  // debugger
-
-  posEnd = e.clientX - posStart
+function touchRx(control: HTMLDivElement) {
+  return fromEvent<React.TouchEvent>(control, 'touchstart').pipe(
+    map((e) => e.touches[0].clientX),
+    switchMap((xStart) => {
+      return fromEvent<React.TouchEvent>(control, 'touchend').pipe(
+        map((e) => e.changedTouches[0].clientX - xStart),
+        filter(
+          (difference) => difference > limit || difference < -limit
+        )
+      )
+    })
+  )
 }
 
-function mousUp(
-  e: React.MouseEvent,
-  i: number,
-  quTotal: number
-): number {
-  if (!posStart) return i
-  // debugger
-  posStart = 0
-  if (posEnd > limit) return prevIndex(i, quTotal - 1)
-  if (posEnd < -limit) return nextIndex(i, quTotal - 1)
-  return i
+function wheelRx(control: HTMLDivElement) {
+  return fromEvent<React.WheelEvent>(control, 'wheel').pipe(
+    map((e) => e.deltaY)
+  )
 }
 
-function touchStart(e: React.TouchEvent) {
-  posStart = e.touches[0].clientX
-}
-
-function touchMove(e: React.TouchEvent) {
-  // debugger
-  if (!posStart) return
-  let qqq = e.touches[0].clientX
-  posEnd = qqq - posStart
-  // debugger
-}
-
-function touchEnd(
-  e: React.TouchEvent,
-  i: number,
-  quTotal: number
-): number {
-  if (!posStart) return i
-
-  posStart = 0
-  if (posEnd > limit) return prevIndex(i, quTotal - 1)
-  if (posEnd < -limit) return nextIndex(i, quTotal - 1)
-  return i
-}
-
-function wheel(
-  e: React.WheelEvent,
-  i: number,
-  quTotal: number
-): number {
-  let r: number = i
-  if (e.deltaY > 0) r = prevIndex(i, quTotal - 1)
-  if (e.deltaY < 0) r = nextIndex(i, quTotal - 1)
-  return r
-}
-
-function arrowCtrl(
-  e: React.KeyboardEvent,
-  i: number,
-  quTotal: number
-): number {
-  let r: number = i
-  if (e.key === 'ArrowLeft') r = prevIndex(i, quTotal - 1)
-  if (e.key === 'ArrowRight') r = nextIndex(i, quTotal - 1)
-  return r
+function KeyboardRx(control: HTMLDivElement) {
+  return fromEvent<React.KeyboardEvent>(control, 'keydown').pipe(
+    map((e) => e.key)
+  )
 }
 
 function prevIndex(i: number, maxI: number): number {

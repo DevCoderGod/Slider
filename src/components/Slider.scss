@@ -1,5 +1,5 @@
 .slider {
-  &__wind {
+  &__window {
     border: solid 2px #005;
     position: relative;
     width: 100px; //?
@@ -7,26 +7,13 @@
     height: 100px;
     overflow: hidden;
   }
-  &__cover {
-    height: 100px;
+  &__arrows {
+    width: min-content;
+    margin: 0 auto;
+    display: flex;
+    justify-content: center;
+    button {
+      margin: 10px;
+    }
   }
-  .slide {
-    position: absolute;
-  }
-}
-
-.slider__arrows {
-  width: min-content;
-  margin: 0 auto;
-  display: flex;
-  justify-content: center;
-}
-.arrow {
-  margin: 10px;
-}
-
-.arrows {
-  border: solid 1px #000;
-  width: 500px;
-  height: 100px;
 }
